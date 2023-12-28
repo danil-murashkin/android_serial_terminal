@@ -17,11 +17,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Example of a call to a native method
-        binding.sampleText.text = stringFromJNI()
+        binding.sampleText.text = "Nope"
 
 
         val uart = UARTTTYMT2Operator();
-        uart.open( "/dev/ttyMT2");
+        uart.open( "/dev/tty1WK2");
         val charset = Charsets.UTF_8
         val byteArrayWrite = "Ping\r\n".toByteArray(charset)
         Log.d("DEBUG", byteArrayWrite.toString(charset) )
@@ -30,19 +30,12 @@ class MainActivity : AppCompatActivity() {
         val bytes = uart.read();
         if (bytes != null) {
             Log.d("DEBUG", bytes.toString(charset))
+            binding.sampleText.text = bytes.toString(charset)
         }
-
         uart.close();
-        Log.d("DEBUG", "End" )
 
 
     }
-
-    /**
-     * A native method that is implemented by the 'serial_terminal' native library,
-     * which is packaged with this application.
-     */
-    external fun stringFromJNI(): String
 
     companion object {
         // Used to load the 'serial_terminal' library on application startup.
