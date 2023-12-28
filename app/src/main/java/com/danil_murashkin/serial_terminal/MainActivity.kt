@@ -3,6 +3,7 @@ package com.danil_murashkin.serial_terminal
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
+import android.util.Log
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -17,6 +18,24 @@ class MainActivity : AppCompatActivity() {
 
         // Example of a call to a native method
         binding.sampleText.text = stringFromJNI()
+
+
+        val uart = UARTTTYMT2Operator();
+        uart.open( "/dev/ttyMT2");
+        val charset = Charsets.UTF_8
+        val byteArrayWrite = "Ping\r\n".toByteArray(charset)
+        Log.d("DEBUG", byteArrayWrite.toString(charset) )
+        uart.write( byteArrayWrite, byteArrayWrite.size );
+
+        val bytes = uart.read();
+        if (bytes != null) {
+            Log.d("DEBUG", bytes.toString(charset))
+        }
+
+        uart.close();
+        Log.d("DEBUG", "End" )
+
+
     }
 
     /**
