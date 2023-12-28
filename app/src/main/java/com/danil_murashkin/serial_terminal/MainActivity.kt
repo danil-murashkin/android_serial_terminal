@@ -1,10 +1,15 @@
 package com.danil_murashkin.serial_terminal
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.widget.TextView
-import android.util.Log
+import android.os.Environment
+import android.view.View
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
+import java.io.File
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,9 +23,14 @@ class MainActivity : AppCompatActivity() {
 
         // Example of a call to a native method
         binding.sampleText.text = "Nope"
+        var openFileButton = findViewById<View>(R.id.openFileButton) as Button
+        openFileButton.setOnClickListener(View.OnClickListener { openFileButtonClick() })
 
 
-        val uart = UARTTTYMT2Operator();
+
+
+
+        /*val uart = UARTTTYMT2Operator();
         uart.open( "/dev/tty1WK2");
         val charset = Charsets.UTF_8
         val byteArrayWrite = "Ping\r\n".toByteArray(charset)
@@ -32,9 +42,20 @@ class MainActivity : AppCompatActivity() {
             Log.d("DEBUG", bytes.toString(charset))
             binding.sampleText.text = bytes.toString(charset)
         }
-        uart.close();
+        uart.close();*/
 
 
+    }
+    fun openFileButtonClick() {
+        binding.sampleText.text = "Olololo"
+
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        val uri = Uri.parse(
+            Environment.getExternalStorageDirectory().path
+                    + File.separator + "myFolder" + File.separator
+        )
+        intent.setDataAndType(uri, "audio/wav")
+        startActivity(Intent.createChooser(intent, "Open folder"))
     }
 
     companion object {

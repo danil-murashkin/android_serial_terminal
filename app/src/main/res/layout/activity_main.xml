@@ -4,16 +4,105 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:scrollbarStyle="insideOverlay"
     tools:context=".MainActivity">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/aes128KeyTextInput"
+        android:layout_width="270dp"
+        android:layout_height="36dp"
+        android:background="#FFFFFF"
+        android:singleLine="true"
+        android:text="2b7e1516 28aed2a6 abf71588 09cf4f3c"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@+id/generateKeyButton2"
+        app:layout_constraintEnd_toStartOf="@+id/generateKeyButton2" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/aes128KeyTextInput2"
+        android:layout_width="270dp"
+        android:layout_height="36dp"
+        android:background="#FFFFFF"
+        android:singleLine="true"
+        android:text="2b7e1516 28aed2a6 abf71588 09cf4f3c"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@+id/generateKeyButton2"
+        app:layout_constraintEnd_toStartOf="@+id/generateKeyButton3" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/aes128KeyTextInput3"
+        android:layout_width="270dp"
+        android:layout_height="36dp"
+        android:background="#FFFFFF"
+        android:singleLine="true"
+        android:text="2b7e1516 28aed2a6 abf71588 09cf4f3c"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@+id/generateKeyButton6"
+        app:layout_constraintEnd_toStartOf="@+id/generateKeyButton6" />
+
+    <Button
+        android:id="@+id/generateKeyButton2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SEND"
+        app:layout_constraintBottom_toTopOf="@+id/generateKeyButton6"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/generateKeyButton6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SEND"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/generateKeyButton3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SEND"
+        app:layout_constraintBottom_toTopOf="@+id/generateKeyButton2"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/generateKeyButton5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SEND"
+        app:layout_constraintBottom_toTopOf="@+id/generateKeyButton3"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/openFileButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OPEN"
+        app:layout_constraintBottom_toTopOf="@+id/generateKeyButton3"
+        app:layout_constraintEnd_toStartOf="@+id/generateKeyButton5" />
 
     <TextView
         android:id="@+id/sample_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="377dp"
+        android:layout_height="601dp"
+        android:scrollbarStyle="insideOverlay"
+        android:text="Text"
+        app:layout_constraintStart_toStartOf="@+id/sample_text"
+        app:layout_constraintTop_toBottomOf="@+id/sample_text" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="186dp"
+        android:layout_height="41dp"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="@+id/openFileButton"
+        app:layout_constraintStart_toStartOf="@+id/aes128KeyTextInput2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
