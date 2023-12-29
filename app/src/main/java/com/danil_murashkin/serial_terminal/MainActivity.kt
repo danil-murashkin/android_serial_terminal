@@ -1,14 +1,16 @@
 package com.danil_murashkin.serial_terminal
 
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.view.View
 import android.widget.Button
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
 import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
+import java.nio.charset.Charset
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,8 +30,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
         /*val uart = UARTTTYMT2Operator();
         uart.open( "/dev/tty1WK2");
         val charset = Charsets.UTF_8
@@ -44,18 +44,28 @@ class MainActivity : AppCompatActivity() {
         }
         uart.close();*/
 
-
     }
-    fun openFileButtonClick() {
-        binding.sampleText.text = "Olololo"
 
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        val uri = Uri.parse(
-            Environment.getExternalStorageDirectory().path
-                    + File.separator + "myFolder" + File.separator
-        )
-        intent.setDataAndType(uri, "audio/wav")
-        startActivity(Intent.createChooser(intent, "Open folder"))
+
+    private fun openFileButtonClick()
+    {
+        binding.sampleText.text = "Button click"
+
+        //openFileIntentActivity.launch( "audio/wav" )
+        openFileActivity.launch( "text/plain" )
+    }
+
+    private val openFileActivity = registerForActivityResult( ActivityResultContracts.GetContent() ) // OpenDocument
+    { uri ->
+        if (uri != null) {
+            binding.sampleText.text = uri.path
+            val fileRead:File = File(uri.path)
+
+            //val stream: FileInputStream = openFileInput(uri.path)
+            //val data = ByteArray(1000)
+            //stream.read(data)
+            //stream.close()
+        }
     }
 
     companion object {
