@@ -10,8 +10,8 @@ import java.io.Closeable
 
 
 
-interface IUARTOperator : Closeable {
-    fun open( path: String, baudRate: Int = 115200, dataBits: Int = 8, stopBits: Int = 1, parity: Char = 'N' )
+interface UARTOperator : Closeable {
+    fun open( path: String, baudRate: Int = 115200, dataBits: Int = 8, stopBits: Int = 1, parity: Char = 'N' ):Int
 
     fun write(data: ByteArray, data_len: Int)
 

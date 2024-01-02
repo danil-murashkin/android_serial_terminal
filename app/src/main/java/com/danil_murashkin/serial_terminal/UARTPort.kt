@@ -10,13 +10,15 @@ import android.util.Log
 
 
 
-class UARTTTYMT2Operator : IUARTOperator {
+class UARTPort : UARTOperator {
 
-    override fun open(path: String, baudRate: Int, dataBits: Int, stopBits: Int, parity: Char) {
+    private val TRUE:Int = 1
+    override fun open(path: String, baudRate: Int, dataBits: Int, stopBits: Int, parity: Char):Int {
         val result = openPort(path, baudRate, dataBits, stopBits, parity)
-        if (result != 1) {
+        if (result != TRUE) {
             Log.e("DEBUG","Serial port open failed！")
         }
+        return result
     }
 
     override fun write(data: ByteArray, data_len: Int) {
