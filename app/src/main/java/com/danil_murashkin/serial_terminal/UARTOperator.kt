@@ -3,6 +3,7 @@
 // Created by BevisWang on 2018/7/17.
 //
 // URL https://blog.csdn.net/PD_Wang/article/details/81449768
+// https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch18.html
 
 package com.danil_murashkin.serial_terminal
 

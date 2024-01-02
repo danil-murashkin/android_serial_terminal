@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,38 +9,22 @@
     android:scrollbarStyle="insideOverlay"
     tools:context=".MainActivity">
 
-    <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/uartPortNameEditText"
-        android:layout_width="180dp"
-        android:layout_height="48dp"
-        android:background="#FFFFFF"
-        android:digits="0123456789ABCDEF"
-        android:hint="Uart port"
-        android:inputType="textCapCharacters"
-        android:singleLine="true"
-        android:text="/dev/tty1WK2"
-        android:textAlignment="viewStart"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@+id/uartConnectButton"
-        app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
-
     <Button
         android:id="@+id/uartConnectButton"
-        android:layout_width="186dp"
-        android:layout_height="0dp"
+        android:layout_width="166dp"
+        android:layout_height="48dp"
         android:text="CONNECT"
         app:layout_constraintBottom_toTopOf="@+id/sendFileButton"
         app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/packetData1EditText"
-        android:layout_width="280dp"
+        android:layout_width="250dp"
         android:layout_height="48dp"
         android:background="#FFFFFF"
         android:hint="Packet #1"
         android:inputType="textCapCharacters"
         android:singleLine="true"
-        android:text="BUS+STATION=30B"
         android:textAlignment="viewStart"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/sendPacket1Button"
@@ -47,13 +32,12 @@
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/packetData2EditText"
-        android:layout_width="280dp"
+        android:layout_width="250dp"
         android:layout_height="48dp"
         android:background="#FFFFFF"
         android:hint="Packet #2"
         android:inputType="textCapCharacters"
         android:singleLine="true"
-        android:text="BUS+STATION=30A"
         android:textAlignment="viewStart"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/sendPacket2Button"
@@ -61,27 +45,25 @@
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/packetData3EditText"
-        android:layout_width="280dp"
+        android:layout_width="250dp"
         android:layout_height="48dp"
         android:background="#FFFFFF"
         android:hint="Packet #3"
         android:inputType="textCapCharacters"
         android:singleLine="true"
-        android:text="BUS+AUDIO="
         android:textAlignment="viewStart"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/sendPacket2Button"
+        app:layout_constraintBottom_toBottomOf="@+id/sendPacket3Button"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/fileChunkSizeEditText"
-        android:layout_width="180dp"
+        android:layout_width="150dp"
         android:layout_height="48dp"
         android:background="#FFFFFF"
         android:hint="Size at chunk of file"
         android:inputType="number|numberDecimal"
         android:singleLine="true"
-        android:text="4410"
         android:textAlignment="viewStart"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/sendFileButton"
@@ -90,16 +72,16 @@
 
     <Button
         android:id="@+id/sendPacket2Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
         android:text="SEND"
         app:layout_constraintBottom_toTopOf="@+id/sendPacket1Button"
         app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
 
     <Button
         android:id="@+id/sendPacket1Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="10dp"
         android:text="SEND"
@@ -108,44 +90,53 @@
 
     <Button
         android:id="@+id/sendPacket3Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
         android:text="SEND"
         app:layout_constraintBottom_toTopOf="@+id/sendPacket2Button"
         app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
 
     <Button
         android:id="@+id/sendFileButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
         android:text="SEND"
         app:layout_constraintBottom_toTopOf="@+id/sendPacket3Button"
         app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
 
     <Button
         android:id="@+id/openFileButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
         android:layout_marginEnd="10dp"
         android:text="OPEN"
         app:layout_constraintBottom_toBottomOf="@+id/sendFileButton"
         app:layout_constraintEnd_toStartOf="@+id/sendFileButton" />
 
     <TextView
-        android:id="@+id/sample_text"
-        android:layout_width="370dp"
+        android:id="@+id/statusTextView"
+        android:layout_width="330dp"
         android:layout_height="25dp"
         android:layout_marginBottom="5dp"
-        app:layout_constraintBottom_toTopOf="@+id/textView"
-        app:layout_constraintStart_toStartOf="@+id/textView" />
+        app:layout_constraintBottom_toTopOf="@+id/consoleTextView"
+        app:layout_constraintStart_toStartOf="@+id/consoleTextView" />
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="370dp"
+        android:id="@+id/consoleTextView"
+        android:layout_width="330dp"
         android:layout_height="500dp"
+        android:contentDescription="Console"
         android:scrollbarStyle="insideOverlay"
         android:textAlignment="viewStart"
         app:layout_constraintBottom_toTopOf="@+id/uartConnectButton"
+        app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
+
+    <Spinner
+        android:id="@+id/uartPortsSpinner"
+        android:layout_width="174dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="-9dp"
+        app:layout_constraintBottom_toBottomOf="@+id/uartConnectButton"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

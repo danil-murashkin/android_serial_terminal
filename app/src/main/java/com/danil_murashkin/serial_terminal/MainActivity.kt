@@ -1,15 +1,24 @@
 package com.danil_murashkin.serial_terminal
 
+import android.R
 import android.os.Bundle
 import android.util.Log
+import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
+import java.io.LineNumberReader
 
 
 class MainActivity : AppCompatActivity() {
 
+    private val TAG = "SerialTerminal"
+    private val uartDefaultPortName = "/dev/tty1WK2"
     private lateinit var binding: ActivityMainBinding
+    
 
 
     ///?  Saving EditText and retrieve it automatically
@@ -21,24 +30,27 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Example of a call to a native method
-        binding.sampleText.text = "Nope"
-        binding.textView.text = "Nope"
+        binding.statusTextView.text = "Ready for connection"
+        binding.consoleTextView.text = ""
+        binding.sendFileButton.isEnabled = false
+        "/dev/tty1WK2"
+
+        binding.packetData1EditText.setText("BUS+AUDIO=")
+        binding.packetData2EditText.setText("BUS+STATION=30A")
+        binding.packetData3EditText.setText("BUS+STATION=30B")
+        binding.fileChunkSizeEditText.setText("4410")
         binding.uartConnectButton.setOnClickListener{ uartConnectButtonClick() }
         binding.sendPacket3Button.setOnClickListener{ sendPacket3ButtonClick() }
         binding.sendPacket3Button.setOnClickListener{ sendPacket2ButtonClick() }
         binding.sendPacket3Button.setOnClickListener{ sendPacket1ButtonClick() }
         binding.openFileButton.setOnClickListener{ openFileButtonClick() }
         binding.sendFileButton.setOnClickListener { sendFileButtonClick() }
-        binding.sendFileButton.isEnabled = false
-        binding.sampleText.text =  "Ready for connection"
+
+        getDevices()
     }
-
-
-
-
+    
     private var uartConnectedFlag:Boolean = false
-    private fun uartConnectButtonClick()
-    {
+    private fun uartConnectButtonClick() {
         /*
         val charset = Charsets.UTF_8
         val byteArrayWrite = "Ping\r\n".toByteArray(charset)
@@ -53,36 +65,37 @@ class MainActivity : AppCompatActivity() {
         */
 
         val uart = UARTPort();
+        val uartPortName:String = binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString()
         if(!uartConnectedFlag)
         {
             val TRUE:Int = 1
-            if( uart.open( binding.uartPortNameEditText.text.toString() ) == TRUE )
+            if( uart.open( uartPortName ) == TRUE )
             {
-                binding.sampleText.text =  "Connected to port: " + binding.uartPortNameEditText.text
+                binding.statusTextView.text = "Connected to: $uartPortName"
                 uartConnectedFlag = true
                 binding.uartConnectButton.text = "DISCONNECT"
 
-                val charset = Charsets.UTF_8
+                val charset = Charsets.US_ASCII
+
                 val byteArrayWrite = "Ping\r\n".toByteArray(charset)
-                Log.d("DEBUG", byteArrayWrite.toString(charset) )
+                Log.d(TAG, byteArrayWrite.toString(charset) )
                 uart.write( byteArrayWrite, byteArrayWrite.size );
 
-                val bytes = uart.read();
+                Log.d(TAG,"TryRead" )
+                val bytes = uart.read(512);
                 if (bytes != null) {
-                    Log.d("DEBUG", bytes.toString(charset))
-                    binding.sampleText.text = bytes.toString(charset)
+                    Log.d(TAG, bytes.toString(charset))
+                    binding.consoleTextView.text = bytes.toString(charset)
                 }
+                Log.d(TAG,"REaded" )
+            } else {
                 uart.close();
-            }
-            else
-            {
-                uart.close();
-                binding.sampleText.text =  "Failed connection to port: " + binding.uartPortNameEditText.text
+                binding.statusTextView.text = "Failed connection at: $uartPortName"
             }
         }
         else
         {
-            binding.sampleText.text =  "Ready for connection"
+            binding.statusTextView.text =  "Ready for connection"
             uartConnectedFlag = false
             binding.uartConnectButton.text = "CONNECT"
 
@@ -90,26 +103,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
     //.uartConnectButtonClick()
-    private fun sendPacket3ButtonClick()
-    {
+    private fun sendPacket3ButtonClick() {
         //packetData3EditText
     }
-    private fun sendPacket2ButtonClick()
-    {
+    private fun sendPacket2ButtonClick() {
         //packetData2EditText
     }
-    private fun sendPacket1ButtonClick()
-    {
+    private fun sendPacket1ButtonClick() {
         //packetData1EditText
     }
-    private fun sendFileButtonClick()
-    {
+    private fun sendFileButtonClick() {
         //fileChunkSizeEditText
     }
     // https://gist.github.com/s3va/85c1c330f9786c60903934d7e3e8f479
-    private fun openFileButtonClick()
-    {
-        binding.sampleText.text = "Button click"
+    private fun openFileButtonClick() {
+        binding.statusTextView.text = "Button click"
         openFileActivity.launch( arrayOf("*/*") ) // "text/plain" "audio/wav"
     }
 
@@ -117,13 +125,77 @@ class MainActivity : AppCompatActivity() {
     { uri ->
         if (uri != null) {
             contentResolver.openInputStream(uri)?.bufferedReader()?.use {
-                binding.textView.text = it.readText()
-                val scrollAmount: Int = binding.textView.layout.getLineTop(binding.textView.lineCount) - binding.textView.height
-                if (scrollAmount > 0) binding.textView.scrollTo(0, scrollAmount)
+                binding.consoleTextView.text = it.readText()
+                val scrollAmount: Int = binding.consoleTextView.layout.getLineTop(binding.consoleTextView.lineCount) - binding.consoleTextView.height
+                if (scrollAmount > 0) binding.consoleTextView.scrollTo(0, scrollAmount)
 
                 binding.sendFileButton.isEnabled = true
             }
         }
+    }
+
+
+
+
+    private fun getDevices() {
+        val devDrivers: MutableList<String> = ArrayList()
+        val uartPorts: MutableList<String> = ArrayList()
+
+        try {
+            val lineNumberReader = LineNumberReader(FileReader( "/proc/tty/drivers" ))
+            while (true) {
+                val line = lineNumberReader.readLine()
+                if (line != null) {
+                    val lineString: String = line.toString()
+                    val foundSerialIndex = lineString.indexOf("serial", startIndex = 10)
+                    if (foundSerialIndex > 10) {
+                        val foundDevPathBegin = lineString.indexOf("/dev/", startIndex = 10)
+                        val foundDevPathEnd = lineString.indexOf(" ", startIndex = foundDevPathBegin)
+                        val devDriverPath: String = lineString.substring(foundDevPathBegin, foundDevPathEnd).trim()
+                        devDrivers.add(devDriverPath)
+                    }
+                } else {
+                    break
+                }
+            }
+            if (devDrivers.size > 0) {
+                Log.d(TAG, "Found serial drivers: $devDrivers")
+            }
+        }catch( e : Exception)  {
+            Log.d(TAG, "Serial drivers not found")
+            devDrivers.add("/dev/tty")
+        }
+
+        try {
+            val dev = File("/dev")
+            val files = dev.listFiles()
+            var i: Int = 0
+            while (i < files.size) {
+                devDrivers.forEach {
+                    if (files[i].absolutePath.startsWith(it)) {
+                        uartPorts.add(files[i].toString())
+                    }
+                }
+                i++
+            }
+            if (devDrivers.size > 0) {
+                Log.d(TAG, "Found serial ports: $uartPorts")
+            }
+        }catch( e : Exception)  {
+            Log.d(TAG, "Serial ports not found")
+            uartPorts.add("Serial not found")
+        }
+
+        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, uartPorts)
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.uartPortsSpinner.adapter = dataAdapter
+        uartPorts.forEachIndexed { index, portName ->
+            if (portName == uartDefaultPortName) {
+                Log.d(TAG, "Default port $uartDefaultPortName founded")
+                binding.uartPortsSpinner.setSelection(index)
+            }
+        }
+
     }
 
 

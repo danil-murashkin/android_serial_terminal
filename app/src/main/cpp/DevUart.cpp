@@ -212,11 +212,12 @@ int DevUart::readData(BYTE *data, int size) {
     }
     FD_ZERO(&rfds);     // Clear device file desc.
     FD_SET(fd, &rfds);  // Reset device file desc.
-    // TODO Async operation. Thread blocking.
+    ///! TODO Async operation. Thread blocking.
     if (FD_ISSET(fd, &rfds)) {
         FD_ZERO(&rfds);
         FD_SET(fd, &rfds);
-        retval = select(fd + 1, &rfds, NULL, NULL, NULL);
+        timeval timeout = { .tv_usec = 1000000 };
+        retval = select(fd + 1, &rfds, NULL, NULL, &timeout);
         if (retval == -1) {
             LOGE("Select error!");
         } else if (retval) {
