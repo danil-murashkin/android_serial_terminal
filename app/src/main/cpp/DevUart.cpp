@@ -216,8 +216,9 @@ int DevUart::readData(BYTE *data, int size) {
     if (FD_ISSET(fd, &rfds)) {
         FD_ZERO(&rfds);
         FD_SET(fd, &rfds);
-        timeval timeout = { .tv_usec = 1000000 };
-        retval = select(fd + 1, &rfds, NULL, NULL, &timeout);
+        //timeval timeout = { .tv_usec = 100000 };
+        //retval = select(fd + 1, &rfds, NULL, NULL, &timeout);
+        retval = select(fd + 1, &rfds, NULL, NULL, NULL);
         if (retval == -1) {
             LOGE("Select error!");
         } else if (retval) {

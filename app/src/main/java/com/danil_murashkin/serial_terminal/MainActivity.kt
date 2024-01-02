@@ -1,6 +1,9 @@
+@file:Suppress("DEPRECATION")
+
 package com.danil_murashkin.serial_terminal
 
 import android.R
+import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.widget.ArrayAdapter
@@ -9,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
 import java.io.File
 import java.io.FileReader
-import java.io.IOException
 import java.io.LineNumberReader
 
 
@@ -18,6 +20,8 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "SerialTerminal"
     private val uartDefaultPortName = "/dev/tty1WK2"
     private lateinit var binding: ActivityMainBinding
+
+    var runningTask: AsyncTask<*, *, *>? = null
     
 
 
@@ -48,26 +52,36 @@ class MainActivity : AppCompatActivity() {
 
         getDevices()
     }
-    
+
+    @Suppress("DEPRECATION")
+    private class LongOperation : AsyncTask<Void?, Void?, String>() {
+        protected override fun doInBackground(vararg params: Void?): String? {
+            for (i in 0..4) {
+                try {
+                    Thread.sleep(1000)
+                } catch (e: InterruptedException) {
+                    // We were cancelled; stop sleeping!
+                }
+            }
+
+            return "Executed"
+        }
+
+        override fun onPostExecute(result: String) {
+            val txt = findViewById<View>(R.id.consoleTextView) as TextView
+            txt.text = "Executed" // txt.setText(result);
+            // You might want to change "executed" for the returned string
+            // passed into onPostExecute(), but that is up to you
+        }
+    }
+
+
+
     private var uartConnectedFlag:Boolean = false
     private fun uartConnectButtonClick() {
-        /*
-        val charset = Charsets.UTF_8
-        val byteArrayWrite = "Ping\r\n".toByteArray(charset)
-        Log.d("DEBUG", byteArrayWrite.toString(charset) )
-        uart.write( byteArrayWrite, byteArrayWrite.size );
-
-        val bytes = uart.read();
-        if (bytes != null) {
-            Log.d("DEBUG", bytes.toString(charset))
-            binding.sampleText.text = bytes.toString(charset)
-        }
-        */
-
         val uart = UARTPort();
         val uartPortName:String = binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString()
-        if(!uartConnectedFlag)
-        {
+        if(!uartConnectedFlag) {
             val TRUE:Int = 1
             if( uart.open( uartPortName ) == TRUE )
             {
@@ -76,41 +90,38 @@ class MainActivity : AppCompatActivity() {
                 binding.uartConnectButton.text = "DISCONNECT"
 
                 val charset = Charsets.US_ASCII
-
                 val byteArrayWrite = "Ping\r\n".toByteArray(charset)
                 Log.d(TAG, byteArrayWrite.toString(charset) )
-                uart.write( byteArrayWrite, byteArrayWrite.size );
-
-                Log.d(TAG,"TryRead" )
+                //uart.write( byteArrayWrite, byteArrayWrite.size );
                 val bytes = uart.read(512);
                 if (bytes != null) {
                     Log.d(TAG, bytes.toString(charset))
                     binding.consoleTextView.text = bytes.toString(charset)
                 }
-                Log.d(TAG,"REaded" )
             } else {
                 uart.close();
                 binding.statusTextView.text = "Failed connection at: $uartPortName"
             }
-        }
-        else
-        {
+        } else {
             binding.statusTextView.text =  "Ready for connection"
             uartConnectedFlag = false
             binding.uartConnectButton.text = "CONNECT"
-
             uart.close();
         }
-    }
-    //.uartConnectButtonClick()
-    private fun sendPacket3ButtonClick() {
-        //packetData3EditText
+    }//.uartConnectButtonClick()
+
+
+
+    private fun sendPacket1ButtonClick() {
+        //packetData1EditText
+        runningTask = LongOperation()
+        (runningTask as LongOperation).execute()
     }
     private fun sendPacket2ButtonClick() {
         //packetData2EditText
     }
-    private fun sendPacket1ButtonClick() {
-        //packetData1EditText
+    private fun sendPacket3ButtonClick() {
+        //packetData3EditText
     }
     private fun sendFileButtonClick() {
         //fileChunkSizeEditText
@@ -133,7 +144,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
 
 
@@ -195,8 +205,7 @@ class MainActivity : AppCompatActivity() {
                 binding.uartPortsSpinner.setSelection(index)
             }
         }
-
-    }
+    }//.getDevices()
 
 
 
