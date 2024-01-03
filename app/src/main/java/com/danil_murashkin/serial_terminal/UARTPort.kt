@@ -12,8 +12,9 @@ import java.io.FileReader
 import java.io.LineNumberReader
 
 
+
 class UARTPort : UARTOperator {
-    private val TAG : String? = "UARTPort"
+    private val TAG : String = "UARTPort"
 
     private val TRUE:Int = 1
     override fun open(path: String, baudRate: Int, dataBits: Int, stopBits: Int, parity: Char):Int {
@@ -78,7 +79,7 @@ class UARTPort : UARTOperator {
             if (devDrivers.size > 0) {
                 Log.d(TAG, "Found serial drivers: $devDrivers")
             }
-        }catch( e : Exception)  {
+        } catch( e : Exception) {
             Log.d(TAG, "Serial drivers not found")
             devDrivers.add("/dev/tty")
         }
@@ -98,7 +99,7 @@ class UARTPort : UARTOperator {
             if (devDrivers.size > 0) {
                 Log.d(TAG, "Found serial ports: $uartPorts")
             }
-        }catch( e : Exception)  {
+        } catch( e : Exception) {
             Log.d(TAG, "Serial ports not found")
             uartPorts.add("Serial not found")
         }

@@ -19,10 +19,12 @@ import java.io.LineNumberReader
 
 
 class MainActivity : AppCompatActivity() {
-    private val TAG:String? = "SerialTerminal"
-    private val uartDefaultPortName = "/dev/tty1WK2"
+    private val TAG:String = "SerialTerminal"
     private lateinit var binding: ActivityMainBinding
+
+    private val uartDefaultPortName = "/dev/tty1WK2"
     private val uart = UARTPort();
+
 
     ///?  Saving EditText and retrieve it automatically
     /// https://www.digitalocean.com/community/tutorials/android-shared-preferences-example-tutorial
@@ -36,16 +38,15 @@ class MainActivity : AppCompatActivity() {
         binding.statusTextView.text = "Ready for connection"
         binding.consoleTextView.text = ""
         binding.sendFileButton.isEnabled = false
-        "/dev/tty1WK2"
 
         binding.packetData1EditText.setText("BUS+AUDIO=")
         binding.packetData2EditText.setText("BUS+STATION=30A")
         binding.packetData3EditText.setText("BUS+STATION=30B")
         binding.fileChunkSizeEditText.setText("4410")
         binding.uartConnectButton.setOnClickListener{ uartConnectButtonClick() }
+        binding.sendPacket1Button.setOnClickListener{ sendPacket1ButtonClick() }
+        binding.sendPacket2Button.setOnClickListener{ sendPacket2ButtonClick() }
         binding.sendPacket3Button.setOnClickListener{ sendPacket3ButtonClick() }
-        binding.sendPacket3Button.setOnClickListener{ sendPacket2ButtonClick() }
-        binding.sendPacket3Button.setOnClickListener{ sendPacket1ButtonClick() }
         binding.openFileButton.setOnClickListener{ openFileButtonClick() }
         binding.sendFileButton.setOnClickListener { sendFileButtonClick() }
 
@@ -68,14 +69,29 @@ class MainActivity : AppCompatActivity() {
 
     inner class MyAsyncTask: AsyncTask<Void, Void, String>() {
         override fun doInBackground(vararg params: Void?): String? {
-            sleep(10000);
-            return "First"
+            try {
+                while (true) {
+                    sleep(1000);
+
+                    val bytes = uart.read(512);
+                    if (bytes != null) {
+                        val charset = Charsets.US_ASCII
+                        Log.d(TAG, bytes.toString(charset))
+                        binding.consoleTextView.text = bytes.toString(charset)
+                    }
+
+                }
+            } finally {
+            }
         }
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             if (result != null) {
                 Log.d(TAG, result)
             }
+        }
+        fun tets(str: String) {
+            Log.d(TAG, str)
         }
     }
 
@@ -87,21 +103,13 @@ class MainActivity : AppCompatActivity() {
         val uartPortName:String = binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString()
         if(!uartConnectedFlag) {
             val TRUE:Int = 1
-            if( uart.open( uartPortName ) == TRUE )
+            if( uart.open( uartPortName, 460800 ) == TRUE )
             {
                 binding.statusTextView.text = "Connected to: $uartPortName"
                 uartConnectedFlag = true
                 binding.uartConnectButton.text = "DISCONNECT"
 
-                val charset = Charsets.US_ASCII
-                val byteArrayWrite = "Ping\r\n".toByteArray(charset)
-                Log.d(TAG, byteArrayWrite.toString(charset) )
-                //uart.write( byteArrayWrite, byteArrayWrite.size );
-                val bytes = uart.read(512);
-                if (bytes != null) {
-                    Log.d(TAG, bytes.toString(charset))
-                    binding.consoleTextView.text = bytes.toString(charset)
-                }
+
             } else {
                 uart.close();
                 binding.statusTextView.text = "Failed connection at: $uartPortName"
@@ -115,16 +123,15 @@ class MainActivity : AppCompatActivity() {
     }//.uartConnectButtonClick()
 
 
-
-    private fun sendPacket1ButtonClick() {
-        //packetData1EditText
+    private fun uartSendText(text:String) {
+        val charset = Charsets.US_ASCII
+        val byteArrayWrite = binding.packetData1EditText.text.toString().toByteArray(charset)
+        Log.d(TAG, byteArrayWrite.toString(charset) )
+        uart.write( byteArrayWrite, byteArrayWrite.size );
     }
-    private fun sendPacket2ButtonClick() {
-        //packetData2EditText
-    }
-    private fun sendPacket3ButtonClick() {
-        //packetData3EditText
-    }
+    private fun sendPacket1ButtonClick() { uartSendText( binding.packetData1EditText.text.toString() ) }
+    private fun sendPacket2ButtonClick() { uartSendText( binding.packetData2EditText.text.toString() ) }
+    private fun sendPacket3ButtonClick() { uartSendText( binding.packetData3EditText.text.toString() ) }
     private fun sendFileButtonClick() {
         //fileChunkSizeEditText
     }
