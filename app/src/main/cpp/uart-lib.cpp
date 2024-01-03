@@ -1,7 +1,5 @@
 // UartLib.cpp
-//
-// @author BevisWang
-//
+// Based on BevisWang from 2018/7/17
 // URL https://blog.csdn.net/PD_Wang/article/details/81449768
 
 #include <jni.h>

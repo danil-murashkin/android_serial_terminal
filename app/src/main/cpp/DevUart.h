@@ -1,7 +1,5 @@
 // DevUart.h
-//
-// Created by BevisWang on 2018/7/17.
-//
+// Based on BevisWang from 2018/7/17
 // URL https://blog.csdn.net/PD_Wang/article/details/81449768
 
 #ifndef __BLOGPROJECT_DEV_UART_H

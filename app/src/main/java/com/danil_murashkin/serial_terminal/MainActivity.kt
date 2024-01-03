@@ -19,11 +19,10 @@ import java.io.LineNumberReader
 
 
 class MainActivity : AppCompatActivity() {
-    private val TAG = "SerialTerminal"
+    private val TAG:String? = "SerialTerminal"
     private val uartDefaultPortName = "/dev/tty1WK2"
     private lateinit var binding: ActivityMainBinding
-    
-
+    private val uart = UARTPort();
 
     ///?  Saving EditText and retrieve it automatically
     /// https://www.digitalocean.com/community/tutorials/android-shared-preferences-example-tutorial
@@ -50,7 +49,17 @@ class MainActivity : AppCompatActivity() {
         binding.openFileButton.setOnClickListener{ openFileButtonClick() }
         binding.sendFileButton.setOnClickListener { sendFileButtonClick() }
 
-        getDevices()
+        val uartPorts: MutableList<String> = ArrayList()
+        uartPorts.addAll( uart.getAvailablePorts() )
+        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, uartPorts)
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.uartPortsSpinner.adapter = dataAdapter
+        uartPorts.forEachIndexed { index, portName ->
+            if (portName == uartDefaultPortName) {
+                Log.d(TAG, "Default port $uartDefaultPortName founded")
+                binding.uartPortsSpinner.setSelection(index)
+            }
+        }
 
         var  task:MyAsyncTask = MyAsyncTask()
         task.execute()
@@ -74,7 +83,7 @@ class MainActivity : AppCompatActivity() {
 
     private var uartConnectedFlag:Boolean = false
     private fun uartConnectButtonClick() {
-        val uart = UARTPort();
+
         val uartPortName:String = binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString()
         if(!uartConnectedFlag) {
             val TRUE:Int = 1
@@ -139,66 +148,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-    private fun getDevices() {
-        val devDrivers: MutableList<String> = ArrayList()
-        val uartPorts: MutableList<String> = ArrayList()
-
-        try {
-            val lineNumberReader = LineNumberReader(FileReader( "/proc/tty/drivers" ))
-            while (true) {
-                val line = lineNumberReader.readLine()
-                if (line != null) {
-                    val lineString: String = line.toString()
-                    val foundSerialIndex = lineString.indexOf("serial", startIndex = 10)
-                    if (foundSerialIndex > 10) {
-                        val foundDevPathBegin = lineString.indexOf("/dev/", startIndex = 10)
-                        val foundDevPathEnd = lineString.indexOf(" ", startIndex = foundDevPathBegin)
-                        val devDriverPath: String = lineString.substring(foundDevPathBegin, foundDevPathEnd).trim()
-                        devDrivers.add(devDriverPath)
-                    }
-                } else {
-                    break
-                }
-            }
-            if (devDrivers.size > 0) {
-                Log.d(TAG, "Found serial drivers: $devDrivers")
-            }
-        }catch( e : Exception)  {
-            Log.d(TAG, "Serial drivers not found")
-            devDrivers.add("/dev/tty")
-        }
-
-        try {
-            val dev = File("/dev")
-            val files = dev.listFiles()
-            var i: Int = 0
-            while (i < files.size) {
-                devDrivers.forEach {
-                    if (files[i].absolutePath.startsWith(it)) {
-                        uartPorts.add(files[i].toString())
-                    }
-                }
-                i++
-            }
-            if (devDrivers.size > 0) {
-                Log.d(TAG, "Found serial ports: $uartPorts")
-            }
-        }catch( e : Exception)  {
-            Log.d(TAG, "Serial ports not found")
-            uartPorts.add("Serial not found")
-        }
-
-        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, uartPorts)
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.uartPortsSpinner.adapter = dataAdapter
-        uartPorts.forEachIndexed { index, portName ->
-            if (portName == uartDefaultPortName) {
-                Log.d(TAG, "Default port $uartDefaultPortName founded")
-                binding.uartPortsSpinner.setSelection(index)
-            }
-        }
-    }//.getDevices()
 
 
 
