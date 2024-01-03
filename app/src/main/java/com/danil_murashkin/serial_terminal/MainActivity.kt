@@ -5,8 +5,11 @@ package com.danil_murashkin.serial_terminal
 import android.R
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.SystemClock.sleep
 import android.util.Log
+import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
@@ -16,12 +19,9 @@ import java.io.LineNumberReader
 
 
 class MainActivity : AppCompatActivity() {
-
     private val TAG = "SerialTerminal"
     private val uartDefaultPortName = "/dev/tty1WK2"
     private lateinit var binding: ActivityMainBinding
-
-    var runningTask: AsyncTask<*, *, *>? = null
     
 
 
@@ -51,27 +51,22 @@ class MainActivity : AppCompatActivity() {
         binding.sendFileButton.setOnClickListener { sendFileButtonClick() }
 
         getDevices()
+
+        var  task:MyAsyncTask = MyAsyncTask()
+        task.execute()
+        Log.d(TAG, "Second")
     }
 
-    @Suppress("DEPRECATION")
-    private class LongOperation : AsyncTask<Void?, Void?, String>() {
-        protected override fun doInBackground(vararg params: Void?): String? {
-            for (i in 0..4) {
-                try {
-                    Thread.sleep(1000)
-                } catch (e: InterruptedException) {
-                    // We were cancelled; stop sleeping!
-                }
-            }
-
-            return "Executed"
+    inner class MyAsyncTask: AsyncTask<Void, Void, String>() {
+        override fun doInBackground(vararg params: Void?): String? {
+            sleep(10000);
+            return "First"
         }
-
-        override fun onPostExecute(result: String) {
-            val txt = findViewById<View>(R.id.consoleTextView) as TextView
-            txt.text = "Executed" // txt.setText(result);
-            // You might want to change "executed" for the returned string
-            // passed into onPostExecute(), but that is up to you
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            if (result != null) {
+                Log.d(TAG, result)
+            }
         }
     }
 
@@ -114,8 +109,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendPacket1ButtonClick() {
         //packetData1EditText
-        runningTask = LongOperation()
-        (runningTask as LongOperation).execute()
     }
     private fun sendPacket2ButtonClick() {
         //packetData2EditText
