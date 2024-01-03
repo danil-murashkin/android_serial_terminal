@@ -16,6 +16,7 @@ import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
 import java.io.File
 import java.io.FileReader
 import java.io.LineNumberReader
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -71,9 +72,9 @@ class MainActivity : AppCompatActivity() {
         override fun doInBackground(vararg params: Void?): String? {
             try {
                 while (true) {
-                    sleep(1000);
-
-                    val bytes = uart.read(512);
+                    sleep(1);
+                    TimeUnit.MICROSECONDS.sleep(100)
+                    val bytes = uart.read(512)
                     if (bytes != null) {
                         val charset = Charsets.US_ASCII
                         Log.d(TAG, bytes.toString(charset))
@@ -125,13 +126,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun uartSendText(text:String) {
         val charset = Charsets.US_ASCII
-        val byteArrayWrite = binding.packetData1EditText.text.toString().toByteArray(charset)
-        Log.d(TAG, byteArrayWrite.toString(charset) )
-        uart.write( byteArrayWrite, byteArrayWrite.size );
+        val byteArrayWrite = text.toByteArray(charset)
+        uart.write( byteArrayWrite, byteArrayWrite.size )
+        Log.d(TAG, "Uart send: $text" )
+
+        //val bytes = uart.read(512)
+        //val readText = bytes?.toString(charset)
+        //if (bytes != null) { Log.d(TAG, "Uart read: $readText") }
     }
     private fun sendPacket1ButtonClick() { uartSendText( binding.packetData1EditText.text.toString() ) }
     private fun sendPacket2ButtonClick() { uartSendText( binding.packetData2EditText.text.toString() ) }
     private fun sendPacket3ButtonClick() { uartSendText( binding.packetData3EditText.text.toString() ) }
+
     private fun sendFileButtonClick() {
         //fileChunkSizeEditText
     }
