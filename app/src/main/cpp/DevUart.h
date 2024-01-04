@@ -74,10 +74,11 @@ public:
     /**
      * @brief Read device data.
      * @param data read data
-     * @param timeval read time
+     * @param size read data buffer max size
+     * @param timeout read time
      * @return data length
      */
-    int readData(BYTE *data,int size);
+    int readData(BYTE *data, int size, int timeout);
 
     /**
      * @brief Write serial port data.

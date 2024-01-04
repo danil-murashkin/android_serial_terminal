@@ -70,6 +70,19 @@
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
 
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/uartPortBaudrateEditText"
+        android:layout_width="150dp"
+        android:layout_height="48dp"
+        android:background="#FFFFFF"
+        android:hint="Uart port baudrate"
+        android:inputType="number|numberDecimal"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@+id/uartConnectButton"
+        app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
+
     <Button
         android:id="@+id/sendPacket2Button"
         android:layout_width="78dp"
@@ -105,6 +118,15 @@
         app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
 
     <Button
+        android:id="@+id/clearButton"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
+        android:text="CLEAR"
+        android:textSize="13.2sp"
+        app:layout_constraintBottom_toTopOf="@+id/uartConnectButton"
+        app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
+
+    <Button
         android:id="@+id/openFileButton"
         android:layout_width="78dp"
         android:layout_height="48dp"
@@ -124,19 +146,19 @@
     <TextView
         android:id="@+id/consoleTextView"
         android:layout_width="330dp"
-        android:layout_height="500dp"
+        android:layout_height="400dp"
         android:contentDescription="Console"
         android:scrollbarStyle="insideOverlay"
         android:textAlignment="viewStart"
-        app:layout_constraintBottom_toTopOf="@+id/uartConnectButton"
+        android:textIsSelectable="true"
+        app:layout_constraintBottom_toTopOf="@+id/uartPortsSpinner"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
     <Spinner
         android:id="@+id/uartPortsSpinner"
-        android:layout_width="174dp"
+        android:layout_width="250dp"
         android:layout_height="48dp"
-        android:layout_marginStart="-9dp"
-        app:layout_constraintBottom_toBottomOf="@+id/uartConnectButton"
+        app:layout_constraintBottom_toTopOf="@+id/uartConnectButton"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -200,7 +200,7 @@ int DevUart::openUart(UartConfig config) {
     return TRUE;
 }
 
-int DevUart::readData(BYTE *data, int size) {
+int DevUart::readData(BYTE *data, int size, int timeout) {
     int ret, retval;
     fd_set rfds;
     ret = 0;
@@ -210,13 +210,18 @@ int DevUart::readData(BYTE *data, int size) {
     }
     FD_ZERO(&rfds);     // Clear device file desc.
     FD_SET(fd, &rfds);  // Reset device file desc.
-    ///! TODO Async operation. Thread blocking.
+
     if (FD_ISSET(fd, &rfds)) {
         FD_ZERO(&rfds);
         FD_SET(fd, &rfds);
-        //timeval timeout = { .tv_usec = 100000 };
-        //retval = select(fd + 1, &rfds, NULL, NULL, &timeout);
-        retval = select(fd + 1, &rfds, NULL, NULL, NULL);
+
+        if( timeout > 0 && timeout != NULL ) {
+            timeval timeout_val = { .tv_usec = timeout };
+            retval = select(fd + 1, &rfds, NULL, NULL, &timeout_val);
+        } else {
+            retval = select(fd + 1, &rfds, NULL, NULL, NULL);
+        }
+        
         if (retval == -1) {
             LOGE("Select error!");
         } else if (retval) {

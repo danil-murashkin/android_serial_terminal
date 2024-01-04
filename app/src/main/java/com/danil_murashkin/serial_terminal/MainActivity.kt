@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.LineNumberReader
@@ -25,10 +26,13 @@ class MainActivity : AppCompatActivity() {
 
     private val uartDefaultPortName = "/dev/tty1WK2"
     private val uart = UARTPort();
+    private var uartConnectedFlag:Boolean = false
 
 
     ///?  Saving EditText and retrieve it automatically
     /// https://www.digitalocean.com/community/tutorials/android-shared-preferences-example-tutorial
+    // https://gist.github.com/s3va/85c1c330f9786c60903934d7e3e8f479
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -39,11 +43,12 @@ class MainActivity : AppCompatActivity() {
         binding.statusTextView.text = "Ready for connection"
         binding.consoleTextView.text = ""
         binding.sendFileButton.isEnabled = false
-
+        binding.uartPortBaudrateEditText.setText("115200")
+        binding.fileChunkSizeEditText.setText("4410")
         binding.packetData1EditText.setText("BUS+AUDIO=")
         binding.packetData2EditText.setText("BUS+STATION=30A")
         binding.packetData3EditText.setText("BUS+STATION=30B")
-        binding.fileChunkSizeEditText.setText("4410")
+        binding.clearButton.setOnClickListener{ clearButtonClick() }
         binding.uartConnectButton.setOnClickListener{ uartConnectButtonClick() }
         binding.sendPacket1Button.setOnClickListener{ sendPacket1ButtonClick() }
         binding.sendPacket2Button.setOnClickListener{ sendPacket2ButtonClick() }
@@ -63,44 +68,68 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        var  task:MyAsyncTask = MyAsyncTask()
+        var task = mainWhileReadUartAsyncTask()
         task.execute()
-        Log.d(TAG, "Second")
+    }//.onCreate()
+
+
+
+    private fun sendFileButtonClick() {
+        //fileChunkSizeEditText
     }
 
-    inner class MyAsyncTask: AsyncTask<Void, Void, String>() {
+    private fun uartSendText(text:String) {
+        if( uartConnectedFlag ) {
+            val charset = Charsets.US_ASCII
+            val byteArrayWrite = text.toByteArray(charset)
+            uart.write(byteArrayWrite, byteArrayWrite.size)
+            Log.d(TAG, "Uart send: $text")
+        }
+    }
+
+    inner class mainWhileReadUartAsyncTask: AsyncTask<Void, Void, String>() {
         override fun doInBackground(vararg params: Void?): String? {
             try {
                 while (true) {
-                    sleep(1);
                     TimeUnit.MICROSECONDS.sleep(100)
-                    val bytes = uart.read(512)
-                    if (bytes != null) {
-                        val charset = Charsets.US_ASCII
-                        Log.d(TAG, bytes.toString(charset))
-                        binding.consoleTextView.text = bytes.toString(charset)
+                    if( uartConnectedFlag ) {
+                        val bytes = uart.read()
+                        if (bytes != null) {
+                            val charset = Charsets.US_ASCII
+                            Log.d(TAG, bytes.toString(charset))
+                            statusTextViewAddText( bytes.toString(charset) )
+                        }
                     }
-
                 }
-            } finally {
-            }
+            } finally {   }
         }
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            if (result != null) {
-                Log.d(TAG, result)
-            }
-        }
-        fun tets(str: String) {
-            Log.d(TAG, str)
-        }
+    }//.mainWhileReadUartAsyncTask()
+
+
+
+    private fun openFileReadData( fileData:BufferedReader ) {
+        binding.sendFileButton.isEnabled = true
+        statusTextViewAddText( fileData.readText() )
     }
 
+    private fun statusTextViewAddText(text:String) {
+        binding.consoleTextView.append( text )
+        val scrollAmount: Int = binding.consoleTextView.layout.getLineTop(binding.consoleTextView.lineCount) - binding.consoleTextView.height
+        if (scrollAmount > 0) binding.consoleTextView.scrollTo(0, scrollAmount)
+    }
 
+    private val openFileActivity = registerForActivityResult( ActivityResultContracts.OpenDocument() ) { uri ->
+        if (uri != null) {
+            contentResolver.openInputStream(uri)?.bufferedReader(Charsets.US_ASCII)?.use {
+                openFileReadData( it )
+            }
+        }
+    }
+    private fun openFileButtonClick() {
+        openFileActivity.launch( arrayOf("*/*") ) // "text/plain" "audio/wav"
+    }
 
-    private var uartConnectedFlag:Boolean = false
     private fun uartConnectButtonClick() {
-
         val uartPortName:String = binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString()
         if(!uartConnectedFlag) {
             val TRUE:Int = 1
@@ -109,8 +138,6 @@ class MainActivity : AppCompatActivity() {
                 binding.statusTextView.text = "Connected to: $uartPortName"
                 uartConnectedFlag = true
                 binding.uartConnectButton.text = "DISCONNECT"
-
-
             } else {
                 uart.close();
                 binding.statusTextView.text = "Failed connection at: $uartPortName"
@@ -123,44 +150,11 @@ class MainActivity : AppCompatActivity() {
         }
     }//.uartConnectButtonClick()
 
-
-    private fun uartSendText(text:String) {
-        val charset = Charsets.US_ASCII
-        val byteArrayWrite = text.toByteArray(charset)
-        uart.write( byteArrayWrite, byteArrayWrite.size )
-        Log.d(TAG, "Uart send: $text" )
-
-        //val bytes = uart.read(512)
-        //val readText = bytes?.toString(charset)
-        //if (bytes != null) { Log.d(TAG, "Uart read: $readText") }
-    }
     private fun sendPacket1ButtonClick() { uartSendText( binding.packetData1EditText.text.toString() ) }
     private fun sendPacket2ButtonClick() { uartSendText( binding.packetData2EditText.text.toString() ) }
     private fun sendPacket3ButtonClick() { uartSendText( binding.packetData3EditText.text.toString() ) }
 
-    private fun sendFileButtonClick() {
-        //fileChunkSizeEditText
-    }
-    // https://gist.github.com/s3va/85c1c330f9786c60903934d7e3e8f479
-    private fun openFileButtonClick() {
-        binding.statusTextView.text = "Button click"
-        openFileActivity.launch( arrayOf("*/*") ) // "text/plain" "audio/wav"
-    }
-
-    private val openFileActivity = registerForActivityResult( ActivityResultContracts.OpenDocument() )
-    { uri ->
-        if (uri != null) {
-            contentResolver.openInputStream(uri)?.bufferedReader()?.use {
-                binding.consoleTextView.text = it.readText()
-                val scrollAmount: Int = binding.consoleTextView.layout.getLineTop(binding.consoleTextView.lineCount) - binding.consoleTextView.height
-                if (scrollAmount > 0) binding.consoleTextView.scrollTo(0, scrollAmount)
-
-                binding.sendFileButton.isEnabled = true
-            }
-        }
-    }
-
-
+    private fun clearButtonClick() { binding.consoleTextView.text = ""}
 
 
 

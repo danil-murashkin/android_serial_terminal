@@ -11,5 +11,5 @@ import java.io.Closeable
 interface UARTOperator : Closeable {
     fun open( path: String, baudRate: Int = 115200, dataBits: Int = 8, stopBits: Int = 1, parity: Char = 'N' ):Int
     fun write(data: ByteArray, data_len: Int)
-    fun read(maxSize: Int = 256): ByteArray?
+    fun read(maxSize: Int = 256, timeout:Int = 0): ByteArray?
 }

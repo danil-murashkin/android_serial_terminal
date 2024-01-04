@@ -29,8 +29,8 @@ class UARTPort : UARTOperator {
         writePort(data, data_len)
     }
 
-    override fun read(maxSize: Int): ByteArray? {
-        return readPort(maxSize)
+    override fun read(maxSize: Int, timeout: Int): ByteArray? {
+        return readPort(maxSize, timeout)
     }
 
     override fun close() {
@@ -40,7 +40,7 @@ class UARTPort : UARTOperator {
 
 
     private external fun openPort(path: String, baudRate: Int = 115200, dataBits: Int = 8, stopBits: Int = 1, parity: Char = 'N'): Int
-    private external fun readPort(maxSize: Int): ByteArray?
+    private external fun readPort(maxSize: Int, timeout: Int = 0): ByteArray?
     private external fun writePort(data: ByteArray, data_len: Int)
     private external fun closePort()
 

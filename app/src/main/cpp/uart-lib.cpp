@@ -32,11 +32,11 @@ Java_com_danil_1murashkin_serial_1terminal_UARTPort_openPort( JNIEnv *env, jobje
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_com_danil_1murashkin_serial_1terminal_UARTPort_readPort(JNIEnv *env, jobject thiz, jint max_size)
+Java_com_danil_1murashkin_serial_1terminal_UARTPort_readPort(JNIEnv *env, jobject thiz, jint max_size, jint timeout)
 {
     BYTE buf[max_size];
     int len;
-    len = devUartPort.readData(buf, max_size);
+    len = devUartPort.readData(buf, max_size, timeout);
     if(len < 1) return NULL;
     jbyteArray byteArray;
     jbyte *bytes = reinterpret_cast<jbyte *>(buf);
