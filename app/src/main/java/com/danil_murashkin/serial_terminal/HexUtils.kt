@@ -2,10 +2,13 @@ package com.danil_murashkin.serial_terminal
 
 class HexUtils {
     companion object {
-        fun hexStringToByteArray(str_in: String): ByteArray? {
-            var str: String = str_in
+        fun hexStringToByteArray(hexString: String): ByteArray? {
+            var str: String = hexString
             str = str.replace(" ", "")
+            str = str.replace("0x", "")
             val len = str.length
+
+
             if (len % 2 > 0) {
                 return null
             }

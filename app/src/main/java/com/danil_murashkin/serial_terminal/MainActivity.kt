@@ -3,20 +3,15 @@
 package com.danil_murashkin.serial_terminal
 
 import android.R
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
-import android.os.SystemClock.sleep
 import android.util.Log
-import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
 import java.io.BufferedReader
-import java.io.File
-import java.io.FileReader
-import java.io.LineNumberReader
 import java.util.concurrent.TimeUnit
 
 
@@ -28,16 +23,19 @@ class MainActivity : AppCompatActivity() {
     private val TAG:String = "SerialTerminal"
     private lateinit var binding: ActivityMainBinding
 
-    private val uart = UARTPort();
+    private val uart = UARTPort()
     private val readUartTask = mainWhileReadUartAsyncTask()
     private var uartConnectedFlag:Boolean = false
     private var uartPortName:String = "/dev/tty1WK2"
     private var uartPortBaudrate:Int = 460800
     private var readUartTaskWorking:Boolean = false
 
+    lateinit var sendFileData:ByteArray
+    private var sendFileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A55" )
+    //private val sendFileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A56" ) // Test.txt
     private var hexModeFlag:Boolean = false
-    private var openFileData:String = ""
     private var fileChunkSize:Int = 4410
+    private val readFileActivity = registerForActivityResult( ActivityResultContracts.OpenDocument() ) { uri ->  if (uri != null) { sendFileRead(uri) } }
 
 
 
@@ -63,20 +61,12 @@ class MainActivity : AppCompatActivity() {
         binding.sendPacket1Button.setOnClickListener{ uartSendText( binding.packetData1EditText.text.toString() ) }
         binding.sendPacket2Button.setOnClickListener{ uartSendText( binding.packetData2EditText.text.toString() ) }
         binding.sendPacket3Button.setOnClickListener{ uartSendText( binding.packetData3EditText.text.toString() ) }
-        binding.openFileButton.setOnClickListener{ openFileButtonClick() }
-        binding.sendFileButton.setOnClickListener { sendFileButtonClick() }
+        binding.openFileButton.setOnClickListener{ readFileActivity.launch( arrayOf("*/*") ) } // "audio/*", "text/plain"
+        binding.sendFileButton.setOnClickListener { /* ///! */ }
 
-        val uartPorts: MutableList<String> = ArrayList()
-        uartPorts.addAll( uart.getAvailablePorts() )
-        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, uartPorts)
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.uartPortsSpinner.adapter = dataAdapter
-        uartPorts.forEachIndexed { index, portName ->
-            if (portName == uartPortName) {
-                Log.d(TAG, "Default port $uartPortName founded")
-                binding.uartPortsSpinner.setSelection(index)
-            }
-        }
+        uartUpdatePortsAtSpinner()
+        //uartConnect( binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(), wbinding.uartPortBaudrateEditText.text.toString().toInt() )
+        sendFileRead( sendFileUri )
     }//.onCreate()
 
 
@@ -84,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private fun hexModeToggle() {
         if( !hexModeFlag )
         {
-            HexUtils.hexStringToByteArray( "asdasd")
+            //HexUtils.hexStringToByteArray( "asdasd")
             hexModeFlag = true
             binding.hexModeButton.text = "ASCII"
 
@@ -92,11 +82,7 @@ class MainActivity : AppCompatActivity() {
             hexModeFlag = false
             binding.hexModeButton.text = "HEX"
         }
-    }
-
-    private fun sendFileButtonClick() {
-        //fileChunkSizeEditText
-    }
+    }//.hexModeToggle()
 
     private fun uartSendText(text:String) {
         if( uartConnectedFlag ) {
@@ -107,14 +93,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    inner class mainWhileReadUartAsyncTask: AsyncTask<Void, Void, Void>() {
-        override fun doInBackground(vararg params: Void?):Void? {
+    inner class mainWhileReadUartAsyncTask: AsyncTask<Void, Void, String>() {
+        override fun doInBackground(vararg params: Void?): String? {
             try {
-                Log.d(TAG, "START")
-                var ticks:ULong = 0UL
-                while (true && ticks < 10000UL ) {
-                    ticks++
-                    TimeUnit.MICROSECONDS.sleep(100)
+                TimeUnit.MICROSECONDS.sleep(100)
+                while (true) {
+                    TimeUnit.MICROSECONDS.sleep(10)
                     if( uartConnectedFlag ) {
                         val bytes = uart.read()
                         if (bytes != null) {
@@ -125,46 +109,24 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } finally { }
-
-            Log.d(TAG, "FINAL1")
             readUartTaskWorking = false
-
             return null
-        }
-
-        override fun onPostExecute(result: Void?) {
+        }//.doInBackground()
+        override fun onPostExecute(result: String?) {
+            //super.onPostExecute(result)
             readUartTaskWorking = false
-            Log.d(TAG, "FINAL2")
         }
     }//.mainWhileReadUartAsyncTask()
 
-    private fun statusTextViewAddText(text:String) {
-        binding.consoleTextView.append( text )
-        val scrollAmount: Int = binding.consoleTextView.layout.getLineTop(binding.consoleTextView.lineCount) - binding.consoleTextView.height
-        if (scrollAmount > 0) binding.consoleTextView.scrollTo(0, scrollAmount)
-    }
 
-    private fun openFileReadData( fileData:BufferedReader ) {
-        binding.sendFileButton.isEnabled = true
-        openFileData = fileData.readText()
-        statusTextViewAddText( openFileData )
-    }
-    private val openFileActivity = registerForActivityResult( ActivityResultContracts.OpenDocument() ) { uri ->
-        if (uri != null) {
-            contentResolver.openInputStream(uri)?.bufferedReader(Charsets.US_ASCII)?.use {
-                openFileReadData( it )
-            }
-        }
-    }
-    private fun openFileButtonClick() {
-        openFileActivity.launch( arrayOf("*/*") ) // "text/plain" "audio/wav"
-    }
 
-    private fun uartConnect( uartPortName:String, uartPortBaudRate:Int ) {
+    private fun uartConnect( portName:String, baudRate:Int ) {
         if(!uartConnectedFlag) {
             val TRUE:Int = 1
-            if( uart.open( uartPortName, uartPortBaudRate ) == TRUE )
+            if( uart.open( portName, baudRate ) == TRUE )
             {
+                uartPortName = portName
+                uartPortBaudrate = baudRate
                 uartConnectedFlag = true
                 if( !readUartTaskWorking ){
                     readUartTask.execute()
@@ -183,6 +145,42 @@ class MainActivity : AppCompatActivity() {
             uart.close();
         }
     }//.uartConnectButtonClick()
+
+    private fun uartUpdatePortsAtSpinner() {
+        val uartPorts: MutableList<String> = ArrayList()
+        uartPorts.addAll( uart.getAvailablePorts() )
+        val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, uartPorts)
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.uartPortsSpinner.adapter = dataAdapter
+        uartPorts.forEachIndexed { index, portName ->
+            if (portName == uartPortName) {
+                Log.d(TAG, "Default port $uartPortName founded")
+                binding.uartPortsSpinner.setSelection(index)
+            }
+        }
+    }//.uartUpdatePortsAtSpinner()
+
+    private fun sendFileRead( uri: Uri) {
+        val fileSize = contentResolver.openInputStream(uri)?.available()?.toInt() ?: 0
+        if( fileSize > 0 ) {
+            Log.d(TAG, "Open file: size-$fileSize, name-$uri")
+            sendFileUri = uri
+            binding.sendFileButton.isEnabled = true
+            sendFileData = ByteArray(fileSize)
+            contentResolver.openInputStream(uri)?.read( sendFileData )
+            //statusTextViewAddText( sendFileData.decodeToString(0,5) )
+        }
+        // Alternative variant of read file
+        // contentResolver.openInputStream(uri)?.bufferedReader(Charsets.US_ASCII)?.use { statusTextViewAddText( fileData.readText() ) }
+    }//.openFileReadData()
+
+    private fun statusTextViewAddText(text: String?, scrollTop:Boolean = false) {
+        binding.consoleTextView.append(text)
+        /// need fix scroll text
+        if (scrollTop){ binding.consoleTextView.text = binding.consoleTextView.text }
+        //val scrollAmount: Int = binding.consoleTextView.layout.getLineTop(binding.consoleTextView.lineCount) - binding.consoleTextView.height
+        //if (scrollAmount > 0) binding.consoleTextView.scrollTo(0, scrollAmount)
+    }//.statusTextViewAddText()
 
 
 
