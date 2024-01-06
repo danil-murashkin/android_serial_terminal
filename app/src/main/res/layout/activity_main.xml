@@ -80,7 +80,7 @@
         android:singleLine="true"
         android:textAlignment="viewStart"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@+id/uartConnectButton"
+        app:layout_constraintBottom_toBottomOf="@+id/clearButton"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
     <Button
@@ -127,6 +127,16 @@
         app:layout_constraintEnd_toEndOf="@+id/sendPacket1Button" />
 
     <Button
+        android:id="@+id/hexModeButton"
+        android:layout_width="78dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="10dp"
+        android:text="HEX"
+        android:textSize="13.2sp"
+        app:layout_constraintBottom_toTopOf="@+id/uartConnectButton"
+        app:layout_constraintEnd_toStartOf="@+id/clearButton" />
+
+    <Button
         android:id="@+id/openFileButton"
         android:layout_width="78dp"
         android:layout_height="48dp"
@@ -151,14 +161,15 @@
         android:scrollbarStyle="insideOverlay"
         android:textAlignment="viewStart"
         android:textIsSelectable="true"
-        app:layout_constraintBottom_toTopOf="@+id/uartPortsSpinner"
+        app:layout_constraintBottom_toTopOf="@+id/hexModeButton"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
     <Spinner
         android:id="@+id/uartPortsSpinner"
-        android:layout_width="250dp"
+        android:layout_width="179dp"
         android:layout_height="48dp"
-        app:layout_constraintBottom_toTopOf="@+id/uartConnectButton"
+        android:layout_marginStart="-9dp"
+        app:layout_constraintBottom_toBottomOf="@+id/uartConnectButton"
         app:layout_constraintStart_toStartOf="@+id/packetData1EditText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
