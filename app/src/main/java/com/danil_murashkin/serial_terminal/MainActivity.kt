@@ -33,9 +33,9 @@ class MainActivity : AppCompatActivity() {
 
     private var hexModeFlag:Boolean = false
     private var fileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A55" )
-    //private val sendFileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A56" ) // Test.txt
+    //private var fileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A56" ) // Test.txt
     private lateinit var fileData:ByteArray
-    private var fileChunkSize:Int = 4410
+    private var fileChunkSize:Int = 180 //4410
     private var fileUartSendContinueFlag:Boolean = false
     private var fileUartSendChunkId:Int = 0
     private var fileUartSendTime:Int = 0
@@ -62,7 +62,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.hexModeButton.setOnClickListener{ hexModeToggle() }
         binding.clearButton.setOnClickListener{ binding.consoleTextView.text = "" }
-        binding.uartConnectButton.setOnClickListener{ uartConnect( binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(), binding.uartPortBaudrateEditText.text.toString().toInt() ) }
+        binding.uartConnectButton.setOnClickListener{ uartConnect(
+            binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(),
+            binding.uartPortBaudrateEditText.text.toString().toInt() ) }
         binding.sendPacket1Button.setOnClickListener{ uartSendText( binding.packetData1EditText.text.toString() ) }
         binding.sendPacket2Button.setOnClickListener{ uartSendText( binding.packetData2EditText.text.toString() ) }
         binding.sendPacket3Button.setOnClickListener{ uartSendText( binding.packetData3EditText.text.toString() ) }
@@ -75,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         uartFileSend( fileData, fileChunkSize )
         //hexModeToggle()
     }//.onCreate()
-    
+
 
 
     inner class mainWhileReadUartAsyncTask: AsyncTask<Void, Void, String>() {
@@ -84,16 +86,19 @@ class MainActivity : AppCompatActivity() {
                 TimeUnit.MICROSECONDS.sleep(100)
                 while (true) {
                     //TimeUnit.MICROSECONDS.sleep(10)
-                    if( uartConnectedFlag ) {
+                    if (uartConnectedFlag) {
                         val bytes = uart.read()
                         if (bytes != null) {
                             if (hexModeFlag) {
-                                Log.d(TAG, "Uart receive bytes: " + HexUtils.bytesToHexString(bytes))
-                                statusTextViewAddText("> "+HexUtils.bytesToHexString(bytes)+"\n")
+                                Log.d( TAG,"Uart receive bytes: " + HexUtils.bytesToHexString(bytes) )
+                                statusTextViewAddText("> " + HexUtils.bytesToHexString(bytes) + "\n")
                             } else {
                                 Log.d(TAG, "Uart receive text: " + bytes.toString(baseCharset))
-                                statusTextViewAddText("> "+bytes.toString(baseCharset)+"\n")
+                                statusTextViewAddText("> " + bytes.toString(baseCharset) + "\n")
                             }
+                        }
+                        if (fileUartSendContinueFlag) {
+                            uartFileSendChunk( fileData, fileChunkSize, fileUartSendChunkId )
                         }
                     }
                 }
@@ -107,32 +112,39 @@ class MainActivity : AppCompatActivity() {
         }
     }//.mainWhileReadUartAsyncTask()
 
+    private fun uartFileSendChunk( data:ByteArray, chunkSize:Int, chunkId:Int ) {
+        if( uartConnectedFlag ) {
+            var dataLen: Int = chunkSize
+            var dataPointer: Int = chunkId*chunkSize
+            if ((data.size - chunkId*chunkSize) <= chunkSize) {
+                dataLen = data.size
+                fileUartSendContinueFlag = false
+            }else{
+                fileUartSendContinueFlag = true
+            }
+            fileUartSendChunkId++
+            val dataSend:ByteArray = data.slice(dataPointer until (dataPointer + dataLen)).toByteArray()
+            uart.write(dataSend, dataLen)
+            if (hexModeFlag) {
+                val shortDataStrHex: String = HexUtils.bytesToHexString( dataSend.slice(dataPointer..4).toByteArray() )  + "..."
+                Log.d( TAG,"Uart send file chunk bytes #$chunkId: len=$dataLen, data=$shortDataStrHex" )
+                //statusTextViewAddText("< $shortDataStrHex \n")
+            } else {
+                val shortDataStrText: String = dataSend.slice(dataPointer..4).toByteArray().toString(baseCharset) + "..."
+                Log.d( TAG,"Uart send file chunk text #$chunkId: len=$dataLen, data=$shortDataStrText" )
+                //statusTextViewAddText("< $shortDataStrText \n")
+            }
+        }
+    }//.uartFileSendChunk()
+
     private fun uartFileSend( data:ByteArray, chunkSize:Int ) {
         fileData = data
         fileChunkSize = chunkSize
         fileUartSendChunkId = 0
         fileUartSendTime = 0
-
-        var dataLen:Int = chunkSize
-        if( data.size <= chunkSize ) {
-            dataLen = data.size
-            fileUartSendContinueFlag = false
-        } else {
-            fileUartSendContinueFlag = true
-        }
-        uart.write(data.slice( 0..dataLen).toByteArray(), dataLen)
-        fileUartSendChunkId++
-
-        if (hexModeFlag) {
-            val shortDataStrHex: String = HexUtils.bytesToHexString(data.slice(0..3).toByteArray()) + "..." + HexUtils.bytesToHexString(data.slice(dataLen-4..dataLen-1).toByteArray())
-            Log.d(TAG, "Uart send file chunk bytes #$fileUartSendChunkId: len=$dataLen, data=$shortDataStrHex")
-            statusTextViewAddText("< $shortDataStrHex \n")
-        } else {
-            val shortDataStrText: String = data.decodeToString(0,4) + "..." + data.decodeToString(dataLen-4, dataLen-1)
-            Log.d(TAG, "Uart send file chunk text #$fileUartSendChunkId: len=$dataLen, data=$shortDataStrText")
-            statusTextViewAddText("< $shortDataStrText \n")
-        }
+        uartFileSendChunk( fileData, fileChunkSize, fileUartSendChunkId )
     }//.uartFileSend()
+
 
     private fun uartSendText(text:String) {
         var sendTextFlag:Boolean = true
