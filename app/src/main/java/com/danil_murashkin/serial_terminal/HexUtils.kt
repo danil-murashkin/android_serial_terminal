@@ -6,18 +6,19 @@ class HexUtils {
             var str: String = hexString
             str = str.replace(" ", "")
             str = str.replace("0x", "")
+            str.forEach {if( !( ((it >= '0') && (it <= '9')) || ((it >= 'A') && (it <= 'F')) || ((it >= 'a') && (it <= 'f')) ) ) return null }
+            str = str.uppercase()
             val len = str.length
+            if (len % 2 > 0) { return null }
 
-
-            if (len % 2 > 0) {
-                return null
-            }
             val data = ByteArray(len / 2)
             var i = 0
             while (i < len) {
-                data[i / 2] =
-                    ((str[i].digitToIntOrNull(16) ?: -1 shl 4) + str[i + 1].digitToIntOrNull(16)!!
-                        ?: -1).toByte()
+                val msb: Int? = str[i].digitToIntOrNull(16)
+                val lsb: Int? = str[i+1].digitToIntOrNull(16)
+                if( msb != null && lsb != null ) {
+                    data[i / 2] = (msb * 16 + lsb).toByte()
+                }
                 i += 2
             }
             return data

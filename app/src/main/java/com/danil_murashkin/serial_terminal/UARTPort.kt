@@ -101,7 +101,7 @@ class UARTPort : UARTOperator {
             }
         } catch( e : Exception) {
             Log.d(TAG, "Serial ports not found")
-            uartPorts.add("Serial not found")
+            //uartPorts.add("Serial not found")
         }
 
         return  uartPorts

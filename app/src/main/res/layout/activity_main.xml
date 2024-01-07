@@ -156,7 +156,7 @@
     <TextView
         android:id="@+id/consoleTextView"
         android:layout_width="330dp"
-        android:layout_height="400dp"
+        android:layout_height="380dp"
         android:contentDescription="Console"
         android:scrollbarStyle="insideOverlay"
         android:textAlignment="viewStart"

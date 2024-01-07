@@ -11,7 +11,7 @@ import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.danil_murashkin.serial_terminal.databinding.ActivityMainBinding
-import java.io.BufferedReader
+import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 
@@ -29,13 +29,17 @@ class MainActivity : AppCompatActivity() {
     private var uartPortName:String = "/dev/tty1WK2"
     private var uartPortBaudrate:Int = 460800
     private var readUartTaskWorking:Boolean = false
+    private val baseCharset:Charset = Charsets.US_ASCII
 
-    lateinit var sendFileData:ByteArray
-    private var sendFileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A55" )
-    //private val sendFileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A56" ) // Test.txt
     private var hexModeFlag:Boolean = false
+    private var fileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A55" )
+    //private val sendFileUri:Uri = Uri.parse( "content://com.android.providers.downloads.documents/document/msf%3A56" ) // Test.txt
+    private lateinit var fileData:ByteArray
     private var fileChunkSize:Int = 4410
-    private val readFileActivity = registerForActivityResult( ActivityResultContracts.OpenDocument() ) { uri ->  if (uri != null) { sendFileRead(uri) } }
+    private var fileUartSendContinueFlag:Boolean = false
+    private var fileUartSendChunkId:Int = 0
+    private var fileUartSendTime:Int = 0
+    private val fileOpenActivity = registerForActivityResult( ActivityResultContracts.OpenDocument() ) { uri ->  if (uri != null) { fileOpen(uri) } }
 
 
 
@@ -50,10 +54,11 @@ class MainActivity : AppCompatActivity() {
         binding.consoleTextView.text = ""
         binding.uartPortBaudrateEditText.setText( uartPortBaudrate.toString() )
         binding.fileChunkSizeEditText.setText( fileChunkSize.toString() )
-        binding.sendFileButton.isEnabled = false
         binding.packetData1EditText.setText("BUS+AUDIO=")
         binding.packetData2EditText.setText("BUS+STATION=30A")
         binding.packetData3EditText.setText("BUS+STATION=30B")
+        binding.sendFileButton.isEnabled = false
+        binding.uartConnectButton.isEnabled = false
 
         binding.hexModeButton.setOnClickListener{ hexModeToggle() }
         binding.clearButton.setOnClickListener{ binding.consoleTextView.text = "" }
@@ -61,50 +66,34 @@ class MainActivity : AppCompatActivity() {
         binding.sendPacket1Button.setOnClickListener{ uartSendText( binding.packetData1EditText.text.toString() ) }
         binding.sendPacket2Button.setOnClickListener{ uartSendText( binding.packetData2EditText.text.toString() ) }
         binding.sendPacket3Button.setOnClickListener{ uartSendText( binding.packetData3EditText.text.toString() ) }
-        binding.openFileButton.setOnClickListener{ readFileActivity.launch( arrayOf("*/*") ) } // "audio/*", "text/plain"
-        binding.sendFileButton.setOnClickListener { /* ///! */ }
+        binding.openFileButton.setOnClickListener{ fileOpenActivity.launch( arrayOf("*/*") ) } // "audio/*", "text/plain"
+        binding.sendFileButton.setOnClickListener { uartFileSend( fileData, fileChunkSize ) }
 
         uartUpdatePortsAtSpinner()
-        //uartConnect( binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(), wbinding.uartPortBaudrateEditText.text.toString().toInt() )
-        sendFileRead( sendFileUri )
+        uartConnect( binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(), binding.uartPortBaudrateEditText.text.toString().toInt() )
+        fileOpen( fileUri )
+        uartFileSend( fileData, fileChunkSize )
+        //hexModeToggle()
     }//.onCreate()
+    
 
-
-
-    private fun hexModeToggle() {
-        if( !hexModeFlag )
-        {
-            //HexUtils.hexStringToByteArray( "asdasd")
-            hexModeFlag = true
-            binding.hexModeButton.text = "ASCII"
-
-        } else {
-            hexModeFlag = false
-            binding.hexModeButton.text = "HEX"
-        }
-    }//.hexModeToggle()
-
-    private fun uartSendText(text:String) {
-        if( uartConnectedFlag ) {
-            val charset = Charsets.US_ASCII
-            val byteArrayWrite = text.toByteArray(charset)
-            uart.write(byteArrayWrite, byteArrayWrite.size)
-            Log.d(TAG, "Uart send: $text")
-        }
-    }
 
     inner class mainWhileReadUartAsyncTask: AsyncTask<Void, Void, String>() {
         override fun doInBackground(vararg params: Void?): String? {
             try {
                 TimeUnit.MICROSECONDS.sleep(100)
                 while (true) {
-                    TimeUnit.MICROSECONDS.sleep(10)
+                    //TimeUnit.MICROSECONDS.sleep(10)
                     if( uartConnectedFlag ) {
                         val bytes = uart.read()
                         if (bytes != null) {
-                            val charset = Charsets.US_ASCII
-                            Log.d(TAG, bytes.toString(charset))
-                            statusTextViewAddText( bytes.toString(charset) )
+                            if (hexModeFlag) {
+                                Log.d(TAG, "Uart receive bytes: " + HexUtils.bytesToHexString(bytes))
+                                statusTextViewAddText("> "+HexUtils.bytesToHexString(bytes)+"\n")
+                            } else {
+                                Log.d(TAG, "Uart receive text: " + bytes.toString(baseCharset))
+                                statusTextViewAddText("> "+bytes.toString(baseCharset)+"\n")
+                            }
                         }
                     }
                 }
@@ -118,7 +107,53 @@ class MainActivity : AppCompatActivity() {
         }
     }//.mainWhileReadUartAsyncTask()
 
+    private fun uartFileSend( data:ByteArray, chunkSize:Int ) {
+        fileData = data
+        fileChunkSize = chunkSize
+        fileUartSendChunkId = 0
+        fileUartSendTime = 0
 
+        var dataLen:Int = chunkSize
+        if( data.size <= chunkSize ) {
+            dataLen = data.size
+            fileUartSendContinueFlag = false
+        } else {
+            fileUartSendContinueFlag = true
+        }
+        uart.write(data.slice( 0..dataLen).toByteArray(), dataLen)
+        fileUartSendChunkId++
+
+        if (hexModeFlag) {
+            val shortDataStrHex: String = HexUtils.bytesToHexString(data.slice(0..3).toByteArray()) + "..." + HexUtils.bytesToHexString(data.slice(dataLen-4..dataLen-1).toByteArray())
+            Log.d(TAG, "Uart send file chunk bytes #$fileUartSendChunkId: len=$dataLen, data=$shortDataStrHex")
+            statusTextViewAddText("< $shortDataStrHex \n")
+        } else {
+            val shortDataStrText: String = data.decodeToString(0,4) + "..." + data.decodeToString(dataLen-4, dataLen-1)
+            Log.d(TAG, "Uart send file chunk text #$fileUartSendChunkId: len=$dataLen, data=$shortDataStrText")
+            statusTextViewAddText("< $shortDataStrText \n")
+        }
+    }//.uartFileSend()
+
+    private fun uartSendText(text:String) {
+        var sendTextFlag:Boolean = true
+        if( uartConnectedFlag ) {
+            if( hexModeFlag ) {
+                val hexBytes = HexUtils.hexStringToByteArray(text)
+                if (hexBytes != null) {
+                    sendTextFlag = false
+                    uart.write(hexBytes, hexBytes.size)
+                    Log.d(TAG, "Uart send bytes: $hexBytes")
+                    statusTextViewAddText("< "+HexUtils.bytesToHexString(hexBytes)+"\n")
+                }
+            }
+        }
+        if( sendTextFlag ) {
+            val textBytes = text.toByteArray(baseCharset)
+            uart.write(textBytes, textBytes.size)
+            Log.d(TAG, "Uart send text: $text")
+            statusTextViewAddText("< $text \n")
+        }
+    }//.uartSendText()
 
     private fun uartConnect( portName:String, baudRate:Int ) {
         if(!uartConnectedFlag) {
@@ -149,6 +184,13 @@ class MainActivity : AppCompatActivity() {
     private fun uartUpdatePortsAtSpinner() {
         val uartPorts: MutableList<String> = ArrayList()
         uartPorts.addAll( uart.getAvailablePorts() )
+        if ( uartPorts.size > 0) {
+            binding.uartConnectButton.isEnabled = true
+        } else {
+            binding.statusTextView.text = "Serial ports not found"
+            uartPorts.add( "Serial not found" )
+            binding.uartConnectButton.isEnabled = false
+        }
         val dataAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, uartPorts)
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.uartPortsSpinner.adapter = dataAdapter
@@ -160,14 +202,46 @@ class MainActivity : AppCompatActivity() {
         }
     }//.uartUpdatePortsAtSpinner()
 
-    private fun sendFileRead( uri: Uri) {
+    private fun hexModeGetText(text:String): String? {
+        val text1Bytes = HexUtils.hexStringToByteArray( text )
+        if( text1Bytes != null ){
+            if( hexModeFlag ) {
+                return HexUtils.bytesToHexString(text1Bytes)
+            } else {
+                return text1Bytes.decodeToString()
+            }
+        } else {
+            if( hexModeFlag ) {
+                val textByteArray = text.toByteArray(baseCharset)
+                return HexUtils.bytesToHexString(textByteArray)
+            }else {
+                return text
+            }
+        }
+        return null
+    }
+    private fun hexModeToggle() {
+        if( !hexModeFlag )
+        {
+            hexModeFlag = true
+            binding.hexModeButton.text = "ASCII"
+        } else {
+            hexModeFlag = false
+            binding.hexModeButton.text = "HEX"
+        }
+        binding.packetData1EditText.setText( hexModeGetText( binding.packetData1EditText.text.toString() ) )
+        binding.packetData2EditText.setText( hexModeGetText( binding.packetData2EditText.text.toString() ) )
+        binding.packetData3EditText.setText( hexModeGetText( binding.packetData3EditText.text.toString() ) )
+    }//.hexModeToggle()
+
+    private fun fileOpen( uri: Uri) {
         val fileSize = contentResolver.openInputStream(uri)?.available()?.toInt() ?: 0
         if( fileSize > 0 ) {
-            Log.d(TAG, "Open file: size-$fileSize, name-$uri")
-            sendFileUri = uri
+            Log.d(TAG, "Open file: size=$fileSize, name=$uri")
+            fileUri = uri
             binding.sendFileButton.isEnabled = true
-            sendFileData = ByteArray(fileSize)
-            contentResolver.openInputStream(uri)?.read( sendFileData )
+            fileData = ByteArray(fileSize)
+            contentResolver.openInputStream(uri)?.read( fileData )
             //statusTextViewAddText( sendFileData.decodeToString(0,5) )
         }
         // Alternative variant of read file
