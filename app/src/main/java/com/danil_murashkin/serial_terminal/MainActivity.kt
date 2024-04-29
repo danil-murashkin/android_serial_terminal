@@ -72,9 +72,11 @@ class MainActivity : AppCompatActivity() {
         binding.sendFileButton.setOnClickListener { uartFileSend( fileData, fileChunkSize ) }
 
         uartUpdatePortsAtSpinner()
-        uartConnect( binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(), binding.uartPortBaudrateEditText.text.toString().toInt() )
-        fileOpen( fileUri )
-        uartFileSend( fileData, fileChunkSize )
+        
+        //Test by start
+        //uartConnect( binding.uartPortsSpinner.adapter.getItem( binding.uartPortsSpinner.selectedItemPosition ).toString(), binding.uartPortBaudrateEditText.text.toString().toInt() )
+        //fileOpen( fileUri )
+        //uartFileSend( fileData, fileChunkSize )
         //hexModeToggle()
     }//.onCreate()
 
