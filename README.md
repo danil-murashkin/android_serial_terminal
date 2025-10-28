@@ -178,6 +178,6 @@ chmod 666 /dev/ttyS*
 
 
 ---
-💡 **Author:** [Danil Murashkin](https://github.com/danilmurashkin)  
+💡 **Author:** [Danil Murashkin](https://github.com/danil-murashkin)  
 📅 Version: 1.0  
 📍 Android 7.0+ compatible
