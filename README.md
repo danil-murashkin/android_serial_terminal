@@ -1,10 +1,10 @@
 # Android Serial Terminal
 
-**[🇬🇧 English Version](#-english-version)** | **[🇷🇺 Русская версия](#-русская-версия)**
+**[🇷🇺 Русская версия](#-русская-версия)**
+
+![Screenshot_ASCII_mode](Screenshot_ASCII_mode.jpg)
 
 ---
-## 🇬🇧 English Version
-
 **Android Serial Terminal** is a universal communication terminal for working with **UART / RS232 / RS485** interfaces on Android devices.  
 Unlike typical USB-only serial apps, this project supports a wide range of hardware-level serial interfaces.
 
@@ -95,7 +95,6 @@ Based on original work by **BevisWang (CSDN, 2018)**
 
 
 ---
-
 ## 🇷🇺 Русская версия
 
 **Android Serial Terminal** — это универсальный терминал для работы с последовательными портами (**UART**) на Android-устройствах.  
