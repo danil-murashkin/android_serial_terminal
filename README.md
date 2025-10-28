@@ -87,12 +87,6 @@ Based on original work by **BevisWang (CSDN, 2018)**
 
 **MIT License** — free to use, modify, and distribute.
 
----
-
-💡 **Author:** [Danil Murashkin](https://github.com/danilmurashkin)  
-📅 Version: 1.0  
-📍 Android 7.0+ compatible
-
 
 ---
 ## 🇷🇺 Русская версия
@@ -181,3 +175,9 @@ chmod 666 /dev/ttyS*
 ### 📄 Лицензия
 
 Лицензия: **MIT** — свободно используйте и модифицируйте.
+
+
+---
+💡 **Author:** [Danil Murashkin](https://github.com/danilmurashkin)  
+📅 Version: 1.0  
+📍 Android 7.0+ compatible
